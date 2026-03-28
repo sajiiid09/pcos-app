@@ -16,7 +16,9 @@ class ReportPreviewController extends AsyncNotifier<DoctorSummaryPreview> {
 
   Future<void> refresh() async {
     state = const AsyncLoading();
-    state = AsyncData(await ref.read(reportRepositoryProvider).buildPreview());
+    state = await AsyncValue.guard(
+      () => ref.read(reportRepositoryProvider).buildPreview(),
+    );
   }
 }
 

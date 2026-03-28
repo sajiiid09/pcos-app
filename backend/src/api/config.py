@@ -1,4 +1,5 @@
 from functools import lru_cache
+from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -6,6 +7,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
   app_name: str = "PCOS Companion API"
   api_prefix: str = "/api/v1"
+  api_port: int = 8000
+  environment: Literal["development", "test", "staging", "production"] = "development"
   database_url: str = "sqlite+aiosqlite:///./pcos_backend.db"
 
   model_config = SettingsConfigDict(

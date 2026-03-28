@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/domain/app_types.dart';
+import '../../../core/domain/input_validation.dart';
 import '../application/medication_list_state.dart';
 
 class MedsScreen extends ConsumerStatefulWidget {
@@ -29,6 +30,14 @@ class _MedsScreenState extends ConsumerState<MedsScreen> {
   @override
   Widget build(BuildContext context) {
     final medicationState = ref.watch(medicationListControllerProvider);
+
+    ref.listen(medicationListControllerProvider, (previous, next) {
+      final previousMessage = previous?.value?.errorMessage;
+      final currentMessage = next.value?.errorMessage;
+      if (currentMessage != null && currentMessage != previousMessage) {
+        _showMessage(currentMessage);
+      }
+    });
 
     return Scaffold(
       appBar: AppBar(title: const Text('Medications')),
@@ -65,6 +74,13 @@ class _MedsScreenState extends ConsumerState<MedsScreen> {
               onPressed: state.isSaving ? null : _saveMedication,
               child: const Text('Add medication'),
             ),
+            if (state.errorMessage != null) ...[
+              const SizedBox(height: 12),
+              Text(
+                state.errorMessage!,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            ],
             const SizedBox(height: 24),
             ...state.items.map(
               (item) => Card(
@@ -122,7 +138,25 @@ class _MedsScreenState extends ConsumerState<MedsScreen> {
 
   Future<void> _saveMedication() async {
     final name = _nameController.text.trim();
-    if (name.isEmpty) {
+    final nameError = InputValidation.requiredText(
+      name,
+      fieldName: 'Medication name',
+      maxLength: 80,
+    );
+    final dosageError = InputValidation.requiredText(
+      _dosageController.text,
+      fieldName: 'Dosage',
+      maxLength: 40,
+    );
+    final frequencyError = InputValidation.requiredText(
+      _frequencyController.text,
+      fieldName: 'Frequency',
+      maxLength: 40,
+    );
+
+    final firstError = nameError ?? dosageError ?? frequencyError;
+    if (firstError != null) {
+      _showMessage(firstError);
       return;
     }
 
@@ -146,6 +180,15 @@ class _MedsScreenState extends ConsumerState<MedsScreen> {
     await ref
         .read(medicationListControllerProvider.notifier)
         .logMedication(medicationId, status);
+  }
+
+  void _showMessage(String message) {
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
   }
 }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/domain/app_types.dart';
+import '../../../core/domain/input_validation.dart';
 import '../application/tracking_state.dart';
 
 class TrackScreen extends ConsumerStatefulWidget {
@@ -36,6 +37,14 @@ class _TrackScreenState extends ConsumerState<TrackScreen> {
   @override
   Widget build(BuildContext context) {
     final trackingState = ref.watch(trackingControllerProvider);
+
+    ref.listen(trackingControllerProvider, (previous, next) {
+      final previousMessage = previous?.value?.errorMessage;
+      final currentMessage = next.value?.errorMessage;
+      if (currentMessage != null && currentMessage != previousMessage) {
+        _showMessage(currentMessage);
+      }
+    });
 
     return Scaffold(
       appBar: AppBar(title: const Text('Track')),
@@ -146,6 +155,13 @@ class _TrackScreenState extends ConsumerState<TrackScreen> {
               onPressed: state.isSaving ? null : _logHabit,
               child: const Text('Save habit log'),
             ),
+            if (state.errorMessage != null) ...[
+              const SizedBox(height: 12),
+              Text(
+                state.errorMessage!,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            ],
             const SizedBox(height: 24),
             Card(
               child: Padding(
@@ -184,6 +200,11 @@ class _TrackScreenState extends ConsumerState<TrackScreen> {
   }
 
   Future<void> _logSymptom() async {
+    if (_symptomNotesController.text.trim().length > 240) {
+      _showMessage('Symptom notes are too long.');
+      return;
+    }
+
     await ref.read(trackingControllerProvider.notifier).addSymptomEntry(
           SymptomDraft(
             painSeverity: _painSeverity,
@@ -202,6 +223,28 @@ class _TrackScreenState extends ConsumerState<TrackScreen> {
   }
 
   Future<void> _logHabit() async {
+    final movementError = InputValidation.nonNegativeInt(
+      _movementController.text,
+      fieldName: 'Movement minutes',
+      max: 1440,
+    );
+    final hydrationError = InputValidation.nonNegativeInt(
+      _hydrationController.text,
+      fieldName: 'Hydration glasses',
+      max: 50,
+    );
+    final sleepError = InputValidation.nonNegativeDouble(
+      _sleepController.text,
+      fieldName: 'Sleep hours',
+      max: 24,
+    );
+
+    final firstError = movementError ?? hydrationError ?? sleepError;
+    if (firstError != null) {
+      _showMessage(firstError);
+      return;
+    }
+
     final movement = int.tryParse(_movementController.text) ?? 0;
     final hydration = int.tryParse(_hydrationController.text) ?? 0;
     final sleep = double.tryParse(_sleepController.text) ?? 0;
@@ -214,5 +257,14 @@ class _TrackScreenState extends ConsumerState<TrackScreen> {
             stressLevel: _stress,
           ),
         );
+  }
+
+  void _showMessage(String message) {
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
   }
 }

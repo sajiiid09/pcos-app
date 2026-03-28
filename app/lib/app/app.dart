@@ -19,35 +19,51 @@ class PcosApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final bootstrap = ref.watch(appBootstrapProvider);
 
-    return bootstrap.when(
-      data: (_) => MaterialApp.router(
-        title: 'PCOS Companion',
-        theme: AppTheme.light(),
-        debugShowCheckedModeBanner: false,
-        routerConfig: ref.watch(appRouterProvider),
-      ),
-      loading: () => MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.light(),
-        home: const Scaffold(
-          body: Center(child: CircularProgressIndicator()),
-        ),
-      ),
-      error: (error, _) => MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.light(),
-        home: Scaffold(
-          body: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Text(
-                'App bootstrap failed: $error',
-                textAlign: TextAlign.center,
+    return MaterialApp.router(
+      title: 'PCOS Companion',
+      theme: AppTheme.light(),
+      debugShowCheckedModeBanner: false,
+      routerConfig: ref.watch(appRouterProvider),
+      builder: (context, child) {
+        final overlay = <Widget>[];
+
+        if (bootstrap.isLoading) {
+          overlay.add(
+            const Align(
+              alignment: Alignment.topCenter,
+              child: LinearProgressIndicator(minHeight: 2),
+            ),
+          );
+        }
+
+        if (bootstrap.hasError) {
+          overlay.add(
+            Align(
+              alignment: Alignment.topCenter,
+              child: Material(
+                color: Theme.of(context).colorScheme.errorContainer,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Text(
+                    'Initialization issue: ${bootstrap.error}',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onErrorContainer,
+                        ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
               ),
             ),
-          ),
-        ),
-      ),
+          );
+        }
+
+        return Stack(
+          children: [
+            child ?? const SizedBox.shrink(),
+            ...overlay,
+          ],
+        );
+      },
     );
   }
 }
