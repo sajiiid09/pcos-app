@@ -16,8 +16,7 @@ abstract class AppNotificationService {
 }
 
 class LocalNotificationService implements AppNotificationService {
-  LocalNotificationService()
-      : _plugin = FlutterLocalNotificationsPlugin();
+  LocalNotificationService() : _plugin = FlutterLocalNotificationsPlugin();
 
   final FlutterLocalNotificationsPlugin _plugin;
 
@@ -29,9 +28,7 @@ class LocalNotificationService implements AppNotificationService {
         '@mipmap/ic_launcher',
       );
       const settings = InitializationSettings(android: androidSettings);
-      await _plugin.initialize(
-        settings: settings,
-      );
+      await _plugin.initialize(settings: settings);
     } on MissingPluginException {
       return;
     }

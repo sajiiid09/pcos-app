@@ -15,8 +15,8 @@ class ReportRepository {
   ReportRepository({
     required MedicationRepository medicationRepository,
     required TrackingRepository trackingRepository,
-  })  : _medicationRepository = medicationRepository,
-        _trackingRepository = trackingRepository;
+  }) : _medicationRepository = medicationRepository,
+       _trackingRepository = trackingRepository;
 
   final MedicationRepository _medicationRepository;
   final TrackingRepository _trackingRepository;
@@ -28,10 +28,12 @@ class ReportRepository {
     final symptoms = await _trackingRepository.fetchSymptoms();
     final habits = await _trackingRepository.fetchHabits();
 
-    final takenCount =
-        logs.where((log) => log.status == MedicationLogStatus.taken).length;
-    final adherenceRate =
-        logs.isEmpty ? 0.0 : (takenCount / logs.length) * 100.0;
+    final takenCount = logs
+        .where((log) => log.status == MedicationLogStatus.taken)
+        .length;
+    final adherenceRate = logs.isEmpty
+        ? 0.0
+        : (takenCount / logs.length) * 100.0;
 
     final latestCycle = cycles.isEmpty ? null : cycles.first;
     final latestSymptom = symptoms.isEmpty ? null : symptoms.first;
@@ -58,15 +60,14 @@ class ReportRepository {
       symptomSummary: latestSymptom == null
           ? 'No symptom trend yet.'
           : 'Pain is ${latestSymptom.painSeverity.label.toLowerCase()}, mood is '
-              '${latestSymptom.mood.label.toLowerCase()}, and energy is '
-              '${latestSymptom.energy.label.toLowerCase()}.',
+                '${latestSymptom.mood.label.toLowerCase()}, and energy is '
+                '${latestSymptom.energy.label.toLowerCase()}.',
       lifestyleSummary: latestHabit == null
           ? 'No habit log yet.'
           : '${latestHabit.movementMinutes} minutes of movement, '
-              '${latestHabit.hydrationGlasses} glasses of water, '
-              '${latestHabit.sleepHours.toStringAsFixed(1)} hours of sleep.',
+                '${latestHabit.hydrationGlasses} glasses of water, '
+                '${latestHabit.sleepHours.toStringAsFixed(1)} hours of sleep.',
       questionsForDoctor: questions,
     );
   }
 }
-

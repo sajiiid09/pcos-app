@@ -3,11 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/domain/app_types.dart';
 import '../data/medication_repository.dart';
 
-final medicationListControllerProvider = AsyncNotifierProvider<
-    MedicationListController, MedicationListState>(MedicationListController.new);
+final medicationListControllerProvider =
+    AsyncNotifierProvider<MedicationListController, MedicationListState>(
+      MedicationListController.new,
+    );
 
 class MedicationListController extends AsyncNotifier<MedicationListState> {
-  MedicationRepository get _repository => ref.read(medicationRepositoryProvider);
+  MedicationRepository get _repository =>
+      ref.read(medicationRepositoryProvider);
 
   @override
   Future<MedicationListState> build() async {

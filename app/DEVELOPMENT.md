@@ -1,6 +1,5 @@
 # DEVELOPMENT
 
-- Current focus: app shell, local-first data, meds/symptom/report proof flows.
-- Done: Flutter scaffold, dependency setup, repo reshaped to `app/`.
-- Next: implement Drift-backed repositories, Riverpod state, and the 5-tab shell.
-
+- Current focus: onboarding -> home -> tracking local MVP loop.
+- Done: app shell, local storage foundation, backend kept untouched for Day 2.
+- Next: finish QA on onboarding persistence, dashboard updates, and cycle actions.

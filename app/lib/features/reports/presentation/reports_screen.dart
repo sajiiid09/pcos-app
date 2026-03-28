@@ -60,17 +60,16 @@ class ReportsScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
             FilledButton(
-              onPressed: () => ref
-                  .read(reportPreviewControllerProvider.notifier)
-                  .refresh(),
+              onPressed: () =>
+                  ref.read(reportPreviewControllerProvider.notifier).refresh(),
               child: const Text('Refresh preview'),
             ),
           ],
         ),
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(child: Text('Failed to build report: $error')),
+        error: (error, _) =>
+            Center(child: Text('Failed to build report: $error')),
       ),
     );
   }
 }
-

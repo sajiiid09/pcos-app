@@ -3,6 +3,433 @@
 part of 'app_database.dart';
 
 // ignore_for_file: type=lint
+class $UserProfilesTable extends UserProfiles
+    with TableInfo<$UserProfilesTable, UserProfile> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $UserProfilesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<AgeRange, String> ageRange =
+      GeneratedColumn<String>(
+        'age_range',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      ).withConverter<AgeRange>($UserProfilesTable.$converterageRange);
+  @override
+  late final GeneratedColumnWithTypeConverter<DiagnosisLabel, String>
+  diagnosisLabel = GeneratedColumn<String>(
+    'diagnosis_label',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  ).withConverter<DiagnosisLabel>($UserProfilesTable.$converterdiagnosisLabel);
+  @override
+  late final GeneratedColumnWithTypeConverter<PrimaryGoal, String> primaryGoal =
+      GeneratedColumn<String>(
+        'primary_goal',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      ).withConverter<PrimaryGoal>($UserProfilesTable.$converterprimaryGoal);
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    ageRange,
+    diagnosisLabel,
+    primaryGoal,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'user_profiles';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<UserProfile> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  UserProfile map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return UserProfile(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      ageRange: $UserProfilesTable.$converterageRange.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}age_range'],
+        )!,
+      ),
+      diagnosisLabel: $UserProfilesTable.$converterdiagnosisLabel.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}diagnosis_label'],
+        )!,
+      ),
+      primaryGoal: $UserProfilesTable.$converterprimaryGoal.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}primary_goal'],
+        )!,
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $UserProfilesTable createAlias(String alias) {
+    return $UserProfilesTable(attachedDatabase, alias);
+  }
+
+  static JsonTypeConverter2<AgeRange, String, String> $converterageRange =
+      const EnumNameConverter<AgeRange>(AgeRange.values);
+  static JsonTypeConverter2<DiagnosisLabel, String, String>
+  $converterdiagnosisLabel = const EnumNameConverter<DiagnosisLabel>(
+    DiagnosisLabel.values,
+  );
+  static JsonTypeConverter2<PrimaryGoal, String, String> $converterprimaryGoal =
+      const EnumNameConverter<PrimaryGoal>(PrimaryGoal.values);
+}
+
+class UserProfile extends DataClass implements Insertable<UserProfile> {
+  final String id;
+  final String name;
+  final AgeRange ageRange;
+  final DiagnosisLabel diagnosisLabel;
+  final PrimaryGoal primaryGoal;
+  final DateTime createdAt;
+  const UserProfile({
+    required this.id,
+    required this.name,
+    required this.ageRange,
+    required this.diagnosisLabel,
+    required this.primaryGoal,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['name'] = Variable<String>(name);
+    {
+      map['age_range'] = Variable<String>(
+        $UserProfilesTable.$converterageRange.toSql(ageRange),
+      );
+    }
+    {
+      map['diagnosis_label'] = Variable<String>(
+        $UserProfilesTable.$converterdiagnosisLabel.toSql(diagnosisLabel),
+      );
+    }
+    {
+      map['primary_goal'] = Variable<String>(
+        $UserProfilesTable.$converterprimaryGoal.toSql(primaryGoal),
+      );
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  UserProfilesCompanion toCompanion(bool nullToAbsent) {
+    return UserProfilesCompanion(
+      id: Value(id),
+      name: Value(name),
+      ageRange: Value(ageRange),
+      diagnosisLabel: Value(diagnosisLabel),
+      primaryGoal: Value(primaryGoal),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory UserProfile.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return UserProfile(
+      id: serializer.fromJson<String>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      ageRange: $UserProfilesTable.$converterageRange.fromJson(
+        serializer.fromJson<String>(json['ageRange']),
+      ),
+      diagnosisLabel: $UserProfilesTable.$converterdiagnosisLabel.fromJson(
+        serializer.fromJson<String>(json['diagnosisLabel']),
+      ),
+      primaryGoal: $UserProfilesTable.$converterprimaryGoal.fromJson(
+        serializer.fromJson<String>(json['primaryGoal']),
+      ),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'name': serializer.toJson<String>(name),
+      'ageRange': serializer.toJson<String>(
+        $UserProfilesTable.$converterageRange.toJson(ageRange),
+      ),
+      'diagnosisLabel': serializer.toJson<String>(
+        $UserProfilesTable.$converterdiagnosisLabel.toJson(diagnosisLabel),
+      ),
+      'primaryGoal': serializer.toJson<String>(
+        $UserProfilesTable.$converterprimaryGoal.toJson(primaryGoal),
+      ),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  UserProfile copyWith({
+    String? id,
+    String? name,
+    AgeRange? ageRange,
+    DiagnosisLabel? diagnosisLabel,
+    PrimaryGoal? primaryGoal,
+    DateTime? createdAt,
+  }) => UserProfile(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    ageRange: ageRange ?? this.ageRange,
+    diagnosisLabel: diagnosisLabel ?? this.diagnosisLabel,
+    primaryGoal: primaryGoal ?? this.primaryGoal,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  UserProfile copyWithCompanion(UserProfilesCompanion data) {
+    return UserProfile(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      ageRange: data.ageRange.present ? data.ageRange.value : this.ageRange,
+      diagnosisLabel: data.diagnosisLabel.present
+          ? data.diagnosisLabel.value
+          : this.diagnosisLabel,
+      primaryGoal: data.primaryGoal.present
+          ? data.primaryGoal.value
+          : this.primaryGoal,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserProfile(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('ageRange: $ageRange, ')
+          ..write('diagnosisLabel: $diagnosisLabel, ')
+          ..write('primaryGoal: $primaryGoal, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, name, ageRange, diagnosisLabel, primaryGoal, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is UserProfile &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.ageRange == this.ageRange &&
+          other.diagnosisLabel == this.diagnosisLabel &&
+          other.primaryGoal == this.primaryGoal &&
+          other.createdAt == this.createdAt);
+}
+
+class UserProfilesCompanion extends UpdateCompanion<UserProfile> {
+  final Value<String> id;
+  final Value<String> name;
+  final Value<AgeRange> ageRange;
+  final Value<DiagnosisLabel> diagnosisLabel;
+  final Value<PrimaryGoal> primaryGoal;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const UserProfilesCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.ageRange = const Value.absent(),
+    this.diagnosisLabel = const Value.absent(),
+    this.primaryGoal = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  UserProfilesCompanion.insert({
+    required String id,
+    required String name,
+    required AgeRange ageRange,
+    required DiagnosisLabel diagnosisLabel,
+    required PrimaryGoal primaryGoal,
+    required DateTime createdAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       name = Value(name),
+       ageRange = Value(ageRange),
+       diagnosisLabel = Value(diagnosisLabel),
+       primaryGoal = Value(primaryGoal),
+       createdAt = Value(createdAt);
+  static Insertable<UserProfile> custom({
+    Expression<String>? id,
+    Expression<String>? name,
+    Expression<String>? ageRange,
+    Expression<String>? diagnosisLabel,
+    Expression<String>? primaryGoal,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (ageRange != null) 'age_range': ageRange,
+      if (diagnosisLabel != null) 'diagnosis_label': diagnosisLabel,
+      if (primaryGoal != null) 'primary_goal': primaryGoal,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  UserProfilesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? name,
+    Value<AgeRange>? ageRange,
+    Value<DiagnosisLabel>? diagnosisLabel,
+    Value<PrimaryGoal>? primaryGoal,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return UserProfilesCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      ageRange: ageRange ?? this.ageRange,
+      diagnosisLabel: diagnosisLabel ?? this.diagnosisLabel,
+      primaryGoal: primaryGoal ?? this.primaryGoal,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (ageRange.present) {
+      map['age_range'] = Variable<String>(
+        $UserProfilesTable.$converterageRange.toSql(ageRange.value),
+      );
+    }
+    if (diagnosisLabel.present) {
+      map['diagnosis_label'] = Variable<String>(
+        $UserProfilesTable.$converterdiagnosisLabel.toSql(diagnosisLabel.value),
+      );
+    }
+    if (primaryGoal.present) {
+      map['primary_goal'] = Variable<String>(
+        $UserProfilesTable.$converterprimaryGoal.toSql(primaryGoal.value),
+      );
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserProfilesCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('ageRange: $ageRange, ')
+          ..write('diagnosisLabel: $diagnosisLabel, ')
+          ..write('primaryGoal: $primaryGoal, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $MedicationsTable extends Medications
     with TableInfo<$MedicationsTable, Medication> {
   @override
@@ -829,7 +1256,31 @@ class $CycleEntriesTable extends CycleEntries
     requiredDuringInsert: false,
   );
   @override
-  List<GeneratedColumn> get $columns => [id, startDate, endDate];
+  late final GeneratedColumnWithTypeConverter<FlowLevel?, String> flowLevel =
+      GeneratedColumn<String>(
+        'flow_level',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      ).withConverter<FlowLevel?>($CycleEntriesTable.$converterflowLeveln);
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    startDate,
+    endDate,
+    flowLevel,
+    notes,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -861,6 +1312,12 @@ class $CycleEntriesTable extends CycleEntries
         endDate.isAcceptableOrUnknown(data['end_date']!, _endDateMeta),
       );
     }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
     return context;
   }
 
@@ -882,6 +1339,16 @@ class $CycleEntriesTable extends CycleEntries
         DriftSqlType.dateTime,
         data['${effectivePrefix}end_date'],
       ),
+      flowLevel: $CycleEntriesTable.$converterflowLeveln.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}flow_level'],
+        ),
+      ),
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      ),
     );
   }
 
@@ -889,13 +1356,26 @@ class $CycleEntriesTable extends CycleEntries
   $CycleEntriesTable createAlias(String alias) {
     return $CycleEntriesTable(attachedDatabase, alias);
   }
+
+  static JsonTypeConverter2<FlowLevel, String, String> $converterflowLevel =
+      const EnumNameConverter<FlowLevel>(FlowLevel.values);
+  static JsonTypeConverter2<FlowLevel?, String?, String?> $converterflowLeveln =
+      JsonTypeConverter2.asNullable($converterflowLevel);
 }
 
 class CycleEntry extends DataClass implements Insertable<CycleEntry> {
   final String id;
   final DateTime startDate;
   final DateTime? endDate;
-  const CycleEntry({required this.id, required this.startDate, this.endDate});
+  final FlowLevel? flowLevel;
+  final String? notes;
+  const CycleEntry({
+    required this.id,
+    required this.startDate,
+    this.endDate,
+    this.flowLevel,
+    this.notes,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -903,6 +1383,14 @@ class CycleEntry extends DataClass implements Insertable<CycleEntry> {
     map['start_date'] = Variable<DateTime>(startDate);
     if (!nullToAbsent || endDate != null) {
       map['end_date'] = Variable<DateTime>(endDate);
+    }
+    if (!nullToAbsent || flowLevel != null) {
+      map['flow_level'] = Variable<String>(
+        $CycleEntriesTable.$converterflowLeveln.toSql(flowLevel),
+      );
+    }
+    if (!nullToAbsent || notes != null) {
+      map['notes'] = Variable<String>(notes);
     }
     return map;
   }
@@ -914,6 +1402,12 @@ class CycleEntry extends DataClass implements Insertable<CycleEntry> {
       endDate: endDate == null && nullToAbsent
           ? const Value.absent()
           : Value(endDate),
+      flowLevel: flowLevel == null && nullToAbsent
+          ? const Value.absent()
+          : Value(flowLevel),
+      notes: notes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(notes),
     );
   }
 
@@ -926,6 +1420,10 @@ class CycleEntry extends DataClass implements Insertable<CycleEntry> {
       id: serializer.fromJson<String>(json['id']),
       startDate: serializer.fromJson<DateTime>(json['startDate']),
       endDate: serializer.fromJson<DateTime?>(json['endDate']),
+      flowLevel: $CycleEntriesTable.$converterflowLeveln.fromJson(
+        serializer.fromJson<String?>(json['flowLevel']),
+      ),
+      notes: serializer.fromJson<String?>(json['notes']),
     );
   }
   @override
@@ -935,6 +1433,10 @@ class CycleEntry extends DataClass implements Insertable<CycleEntry> {
       'id': serializer.toJson<String>(id),
       'startDate': serializer.toJson<DateTime>(startDate),
       'endDate': serializer.toJson<DateTime?>(endDate),
+      'flowLevel': serializer.toJson<String?>(
+        $CycleEntriesTable.$converterflowLeveln.toJson(flowLevel),
+      ),
+      'notes': serializer.toJson<String?>(notes),
     };
   }
 
@@ -942,16 +1444,22 @@ class CycleEntry extends DataClass implements Insertable<CycleEntry> {
     String? id,
     DateTime? startDate,
     Value<DateTime?> endDate = const Value.absent(),
+    Value<FlowLevel?> flowLevel = const Value.absent(),
+    Value<String?> notes = const Value.absent(),
   }) => CycleEntry(
     id: id ?? this.id,
     startDate: startDate ?? this.startDate,
     endDate: endDate.present ? endDate.value : this.endDate,
+    flowLevel: flowLevel.present ? flowLevel.value : this.flowLevel,
+    notes: notes.present ? notes.value : this.notes,
   );
   CycleEntry copyWithCompanion(CycleEntriesCompanion data) {
     return CycleEntry(
       id: data.id.present ? data.id.value : this.id,
       startDate: data.startDate.present ? data.startDate.value : this.startDate,
       endDate: data.endDate.present ? data.endDate.value : this.endDate,
+      flowLevel: data.flowLevel.present ? data.flowLevel.value : this.flowLevel,
+      notes: data.notes.present ? data.notes.value : this.notes,
     );
   }
 
@@ -960,37 +1468,47 @@ class CycleEntry extends DataClass implements Insertable<CycleEntry> {
     return (StringBuffer('CycleEntry(')
           ..write('id: $id, ')
           ..write('startDate: $startDate, ')
-          ..write('endDate: $endDate')
+          ..write('endDate: $endDate, ')
+          ..write('flowLevel: $flowLevel, ')
+          ..write('notes: $notes')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, startDate, endDate);
+  int get hashCode => Object.hash(id, startDate, endDate, flowLevel, notes);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is CycleEntry &&
           other.id == this.id &&
           other.startDate == this.startDate &&
-          other.endDate == this.endDate);
+          other.endDate == this.endDate &&
+          other.flowLevel == this.flowLevel &&
+          other.notes == this.notes);
 }
 
 class CycleEntriesCompanion extends UpdateCompanion<CycleEntry> {
   final Value<String> id;
   final Value<DateTime> startDate;
   final Value<DateTime?> endDate;
+  final Value<FlowLevel?> flowLevel;
+  final Value<String?> notes;
   final Value<int> rowid;
   const CycleEntriesCompanion({
     this.id = const Value.absent(),
     this.startDate = const Value.absent(),
     this.endDate = const Value.absent(),
+    this.flowLevel = const Value.absent(),
+    this.notes = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   CycleEntriesCompanion.insert({
     required String id,
     required DateTime startDate,
     this.endDate = const Value.absent(),
+    this.flowLevel = const Value.absent(),
+    this.notes = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        startDate = Value(startDate);
@@ -998,12 +1516,16 @@ class CycleEntriesCompanion extends UpdateCompanion<CycleEntry> {
     Expression<String>? id,
     Expression<DateTime>? startDate,
     Expression<DateTime>? endDate,
+    Expression<String>? flowLevel,
+    Expression<String>? notes,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (startDate != null) 'start_date': startDate,
       if (endDate != null) 'end_date': endDate,
+      if (flowLevel != null) 'flow_level': flowLevel,
+      if (notes != null) 'notes': notes,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1012,12 +1534,16 @@ class CycleEntriesCompanion extends UpdateCompanion<CycleEntry> {
     Value<String>? id,
     Value<DateTime>? startDate,
     Value<DateTime?>? endDate,
+    Value<FlowLevel?>? flowLevel,
+    Value<String?>? notes,
     Value<int>? rowid,
   }) {
     return CycleEntriesCompanion(
       id: id ?? this.id,
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
+      flowLevel: flowLevel ?? this.flowLevel,
+      notes: notes ?? this.notes,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1034,6 +1560,14 @@ class CycleEntriesCompanion extends UpdateCompanion<CycleEntry> {
     if (endDate.present) {
       map['end_date'] = Variable<DateTime>(endDate.value);
     }
+    if (flowLevel.present) {
+      map['flow_level'] = Variable<String>(
+        $CycleEntriesTable.$converterflowLeveln.toSql(flowLevel.value),
+      );
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1046,6 +1580,8 @@ class CycleEntriesCompanion extends UpdateCompanion<CycleEntry> {
           ..write('id: $id, ')
           ..write('startDate: $startDate, ')
           ..write('endDate: $endDate, ')
+          ..write('flowLevel: $flowLevel, ')
+          ..write('notes: $notes, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2036,6 +2572,7 @@ class HabitLogsCompanion extends UpdateCompanion<HabitLog> {
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
+  late final $UserProfilesTable userProfiles = $UserProfilesTable(this);
   late final $MedicationsTable medications = $MedicationsTable(this);
   late final $MedicationLogsTable medicationLogs = $MedicationLogsTable(this);
   late final $CycleEntriesTable cycleEntries = $CycleEntriesTable(this);
@@ -2046,6 +2583,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities => [
+    userProfiles,
     medications,
     medicationLogs,
     cycleEntries,
@@ -2054,6 +2592,234 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   ];
 }
 
+typedef $$UserProfilesTableCreateCompanionBuilder =
+    UserProfilesCompanion Function({
+      required String id,
+      required String name,
+      required AgeRange ageRange,
+      required DiagnosisLabel diagnosisLabel,
+      required PrimaryGoal primaryGoal,
+      required DateTime createdAt,
+      Value<int> rowid,
+    });
+typedef $$UserProfilesTableUpdateCompanionBuilder =
+    UserProfilesCompanion Function({
+      Value<String> id,
+      Value<String> name,
+      Value<AgeRange> ageRange,
+      Value<DiagnosisLabel> diagnosisLabel,
+      Value<PrimaryGoal> primaryGoal,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+
+class $$UserProfilesTableFilterComposer
+    extends Composer<_$AppDatabase, $UserProfilesTable> {
+  $$UserProfilesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<AgeRange, AgeRange, String> get ageRange =>
+      $composableBuilder(
+        column: $table.ageRange,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnWithTypeConverterFilters<DiagnosisLabel, DiagnosisLabel, String>
+  get diagnosisLabel => $composableBuilder(
+    column: $table.diagnosisLabel,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<PrimaryGoal, PrimaryGoal, String>
+  get primaryGoal => $composableBuilder(
+    column: $table.primaryGoal,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$UserProfilesTableOrderingComposer
+    extends Composer<_$AppDatabase, $UserProfilesTable> {
+  $$UserProfilesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get ageRange => $composableBuilder(
+    column: $table.ageRange,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get diagnosisLabel => $composableBuilder(
+    column: $table.diagnosisLabel,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get primaryGoal => $composableBuilder(
+    column: $table.primaryGoal,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$UserProfilesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $UserProfilesTable> {
+  $$UserProfilesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<AgeRange, String> get ageRange =>
+      $composableBuilder(column: $table.ageRange, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DiagnosisLabel, String> get diagnosisLabel =>
+      $composableBuilder(
+        column: $table.diagnosisLabel,
+        builder: (column) => column,
+      );
+
+  GeneratedColumnWithTypeConverter<PrimaryGoal, String> get primaryGoal =>
+      $composableBuilder(
+        column: $table.primaryGoal,
+        builder: (column) => column,
+      );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$UserProfilesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $UserProfilesTable,
+          UserProfile,
+          $$UserProfilesTableFilterComposer,
+          $$UserProfilesTableOrderingComposer,
+          $$UserProfilesTableAnnotationComposer,
+          $$UserProfilesTableCreateCompanionBuilder,
+          $$UserProfilesTableUpdateCompanionBuilder,
+          (
+            UserProfile,
+            BaseReferences<_$AppDatabase, $UserProfilesTable, UserProfile>,
+          ),
+          UserProfile,
+          PrefetchHooks Function()
+        > {
+  $$UserProfilesTableTableManager(_$AppDatabase db, $UserProfilesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$UserProfilesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$UserProfilesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$UserProfilesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<AgeRange> ageRange = const Value.absent(),
+                Value<DiagnosisLabel> diagnosisLabel = const Value.absent(),
+                Value<PrimaryGoal> primaryGoal = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => UserProfilesCompanion(
+                id: id,
+                name: name,
+                ageRange: ageRange,
+                diagnosisLabel: diagnosisLabel,
+                primaryGoal: primaryGoal,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String name,
+                required AgeRange ageRange,
+                required DiagnosisLabel diagnosisLabel,
+                required PrimaryGoal primaryGoal,
+                required DateTime createdAt,
+                Value<int> rowid = const Value.absent(),
+              }) => UserProfilesCompanion.insert(
+                id: id,
+                name: name,
+                ageRange: ageRange,
+                diagnosisLabel: diagnosisLabel,
+                primaryGoal: primaryGoal,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$UserProfilesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $UserProfilesTable,
+      UserProfile,
+      $$UserProfilesTableFilterComposer,
+      $$UserProfilesTableOrderingComposer,
+      $$UserProfilesTableAnnotationComposer,
+      $$UserProfilesTableCreateCompanionBuilder,
+      $$UserProfilesTableUpdateCompanionBuilder,
+      (
+        UserProfile,
+        BaseReferences<_$AppDatabase, $UserProfilesTable, UserProfile>,
+      ),
+      UserProfile,
+      PrefetchHooks Function()
+    >;
 typedef $$MedicationsTableCreateCompanionBuilder =
     MedicationsCompanion Function({
       required String id,
@@ -2719,6 +3485,8 @@ typedef $$CycleEntriesTableCreateCompanionBuilder =
       required String id,
       required DateTime startDate,
       Value<DateTime?> endDate,
+      Value<FlowLevel?> flowLevel,
+      Value<String?> notes,
       Value<int> rowid,
     });
 typedef $$CycleEntriesTableUpdateCompanionBuilder =
@@ -2726,6 +3494,8 @@ typedef $$CycleEntriesTableUpdateCompanionBuilder =
       Value<String> id,
       Value<DateTime> startDate,
       Value<DateTime?> endDate,
+      Value<FlowLevel?> flowLevel,
+      Value<String?> notes,
       Value<int> rowid,
     });
 
@@ -2750,6 +3520,17 @@ class $$CycleEntriesTableFilterComposer
 
   ColumnFilters<DateTime> get endDate => $composableBuilder(
     column: $table.endDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<FlowLevel?, FlowLevel, String> get flowLevel =>
+      $composableBuilder(
+        column: $table.flowLevel,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -2777,6 +3558,16 @@ class $$CycleEntriesTableOrderingComposer
     column: $table.endDate,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get flowLevel => $composableBuilder(
+    column: $table.flowLevel,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$CycleEntriesTableAnnotationComposer
@@ -2796,6 +3587,12 @@ class $$CycleEntriesTableAnnotationComposer
 
   GeneratedColumn<DateTime> get endDate =>
       $composableBuilder(column: $table.endDate, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<FlowLevel?, String> get flowLevel =>
+      $composableBuilder(column: $table.flowLevel, builder: (column) => column);
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
 }
 
 class $$CycleEntriesTableTableManager
@@ -2832,11 +3629,15 @@ class $$CycleEntriesTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<DateTime> startDate = const Value.absent(),
                 Value<DateTime?> endDate = const Value.absent(),
+                Value<FlowLevel?> flowLevel = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => CycleEntriesCompanion(
                 id: id,
                 startDate: startDate,
                 endDate: endDate,
+                flowLevel: flowLevel,
+                notes: notes,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -2844,11 +3645,15 @@ class $$CycleEntriesTableTableManager
                 required String id,
                 required DateTime startDate,
                 Value<DateTime?> endDate = const Value.absent(),
+                Value<FlowLevel?> flowLevel = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => CycleEntriesCompanion.insert(
                 id: id,
                 startDate: startDate,
                 endDate: endDate,
+                flowLevel: flowLevel,
+                notes: notes,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -3376,6 +4181,8 @@ typedef $$HabitLogsTableProcessedTableManager =
 class $AppDatabaseManager {
   final _$AppDatabase _db;
   $AppDatabaseManager(this._db);
+  $$UserProfilesTableTableManager get userProfiles =>
+      $$UserProfilesTableTableManager(_db, _db.userProfiles);
   $$MedicationsTableTableManager get medications =>
       $$MedicationsTableTableManager(_db, _db.medications);
   $$MedicationLogsTableTableManager get medicationLogs =>

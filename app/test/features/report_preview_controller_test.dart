@@ -23,7 +23,9 @@ void main() {
             frequency: 'Daily',
           ),
         );
-    await container.read(trackingControllerProvider.notifier).addHabitLog(
+    await container
+        .read(trackingControllerProvider.notifier)
+        .addHabitLog(
           const HabitDraft(
             movementMinutes: 30,
             hydrationGlasses: 7,
@@ -37,4 +39,3 @@ void main() {
     expect(report.lifestyleSummary, contains('30 minutes'));
   });
 }
-
