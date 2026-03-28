@@ -20,3 +20,16 @@ def test_article_detail() -> None:
   assert response.status_code == 200
   assert response.json()["title"] == "Food myths vs evidence"
 
+
+def test_article_detail_not_found_uses_structured_error() -> None:
+  client = TestClient(app)
+  response = client.get("/api/v1/content/articles/missing-article")
+
+  assert response.status_code == 404
+  assert response.json() == {
+      "error": {
+          "code": "http_error",
+          "message": "Article not found",
+      }
+  }
+
