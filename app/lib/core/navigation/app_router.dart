@@ -10,6 +10,7 @@ import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/onboarding/presentation/splash_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/track/presentation/track_screen.dart';
+import 'error_screen.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final onboardingState = ref.watch(onboardingControllerProvider);
@@ -22,6 +23,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       if (onboardingState.isLoading) {
         return location == '/splash' ? null : '/splash';
+      }
+
+      if (onboardingState.hasError) {
+        return location == '/error' ? null : '/error';
       }
 
       if (!hasProfile) {
@@ -38,6 +43,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/splash',
         builder: (context, state) => const SplashScreen(),
+      ),
+      GoRoute(
+        path: '/error',
+        builder: (context, state) => const ErrorScreen(),
       ),
       GoRoute(
         path: '/onboarding',
