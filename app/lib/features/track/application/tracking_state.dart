@@ -56,10 +56,30 @@ class TrackingController extends AsyncNotifier<TrackingState> {
   }
 
   Future<void> addHabitLog(HabitDraft draft) async {
+    await _runMutation(
+      operation: () => _repository.addHabitLog(draft),
+      errorMessage: 'Unable to save habit log. Please try again.',
+    );
+  }
+
+  Future<void> _runMutation({
+    required Future<void> Function() operation,
+    required String errorMessage,
+  }) async {
     final current = state.value ?? TrackingState.initial();
-    state = AsyncData(current.copyWith(isSaving: true));
-    await _repository.addHabitLog(draft);
-    state = AsyncData(await _load());
+    state = AsyncData(current.copyWith(isSaving: true, clearError: true));
+    try {
+      await operation();
+      state = AsyncData(await _load());
+    } catch (_) {
+      state = AsyncData(
+        current.copyWith(
+          isSaving: false,
+          errorMessage: errorMessage,
+          clearError: false,
+        ),
+      );
+    }
   }
 
   Future<TrackingState> _load() async {

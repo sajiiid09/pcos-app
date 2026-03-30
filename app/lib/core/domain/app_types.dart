@@ -324,16 +324,20 @@ class MedicationListState {
 
   final List<MedicationListItem> items;
   final bool isSaving;
+  final String? errorMessage;
 
   factory MedicationListState.initial() => const MedicationListState(items: []);
 
   MedicationListState copyWith({
     List<MedicationListItem>? items,
     bool? isSaving,
+    String? errorMessage,
+    bool clearError = false,
   }) {
     return MedicationListState(
       items: items ?? this.items,
       isSaving: isSaving ?? this.isSaving,
+      errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
     );
   }
 }
@@ -343,6 +347,7 @@ class TrackingState {
 
   final TrackingSnapshot snapshot;
   final bool isSaving;
+  final String? errorMessage;
 
   factory TrackingState.initial() =>
       const TrackingState(snapshot: TrackingSnapshot());
@@ -351,6 +356,7 @@ class TrackingState {
     return TrackingState(
       snapshot: snapshot ?? this.snapshot,
       isSaving: isSaving ?? this.isSaving,
+      errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
     );
   }
 }

@@ -50,3 +50,27 @@ def test_doctor_summary_preview() -> None:
   assert payload["adherence_rate"] == 100.0
   assert "30 minutes" in payload["lifestyle_summary"]
 
+
+def test_doctor_summary_preview_validation_error_shape() -> None:
+  client = TestClient(app)
+  response = client.post(
+      "/api/v1/reports/doctor-summary/preview",
+      json={
+          "medications": [
+              {
+                  "medication_name": "Metformin",
+                  "dosage": "500 mg",
+                  "status": "taken",
+              }
+          ],
+      },
+  )
+
+  assert response.status_code == 422
+  assert response.json() == {
+      "error": {
+          "code": "validation_error",
+          "message": "Invalid request payload.",
+      }
+  }
+

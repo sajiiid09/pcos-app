@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/domain/app_types.dart';
+import '../../../core/domain/input_validation.dart';
 import '../application/tracking_state.dart';
 
 class TrackScreen extends ConsumerStatefulWidget {
@@ -33,6 +34,14 @@ class _TrackScreenState extends ConsumerState<TrackScreen> {
   Widget build(BuildContext context) {
     final trackingState = ref.watch(trackingControllerProvider);
     final currentCycle = trackingState.value?.snapshot.currentCycle;
+
+    ref.listen(trackingControllerProvider, (previous, next) {
+      final previousMessage = previous?.value?.errorMessage;
+      final currentMessage = next.value?.errorMessage;
+      if (currentMessage != null && currentMessage != previousMessage) {
+        _showMessage(currentMessage);
+      }
+    });
 
     return Scaffold(
       appBar: AppBar(title: const Text('Track')),
@@ -248,5 +257,14 @@ class _TrackScreenState extends ConsumerState<TrackScreen> {
     if (ended) {
       context.go('/home');
     }
+  }
+
+  void _showMessage(String message) {
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
   }
 }

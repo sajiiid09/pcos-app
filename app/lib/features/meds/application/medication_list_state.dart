@@ -18,23 +18,43 @@ class MedicationListController extends AsyncNotifier<MedicationListState> {
   }
 
   Future<void> addMedication(MedicationDraft draft) async {
-    final current = state.value ?? MedicationListState.initial();
-    state = AsyncData(current.copyWith(isSaving: true));
-    await _repository.addMedication(draft);
-    state = AsyncData(await _load());
+    await _runMutation(
+      operation: () => _repository.addMedication(draft),
+      errorMessage: 'Unable to save medication. Please try again.',
+    );
   }
 
   Future<void> logMedication(
     String medicationId,
     MedicationLogStatus statusValue,
   ) async {
-    final current = state.value ?? MedicationListState.initial();
-    state = AsyncData(current.copyWith(isSaving: true));
-    await _repository.logMedication(
-      medicationId: medicationId,
-      status: statusValue,
+    await _runMutation(
+      operation: () => _repository.logMedication(
+        medicationId: medicationId,
+        status: statusValue,
+      ),
+      errorMessage: 'Unable to update medication log. Please try again.',
     );
-    state = AsyncData(await _load());
+  }
+
+  Future<void> _runMutation({
+    required Future<void> Function() operation,
+    required String errorMessage,
+  }) async {
+    final current = state.value ?? MedicationListState.initial();
+    state = AsyncData(current.copyWith(isSaving: true, clearError: true));
+    try {
+      await operation();
+      state = AsyncData(await _load());
+    } catch (_) {
+      state = AsyncData(
+        current.copyWith(
+          isSaving: false,
+          errorMessage: errorMessage,
+          clearError: false,
+        ),
+      );
+    }
   }
 
   Future<MedicationListState> _load() async {
