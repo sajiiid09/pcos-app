@@ -33,20 +33,27 @@ void main() {
           ),
         );
 
-    final stateAfterAdd =
-        await container.read(medicationListControllerProvider.future);
-    expect(stateAfterAdd.items.any((item) => item.name == 'Myo-inositol'), isTrue);
+    final stateAfterAdd = await container.read(
+      medicationListControllerProvider.future,
+    );
+    expect(
+      stateAfterAdd.items.any((item) => item.name == 'Myo-inositol'),
+      isTrue,
+    );
 
-    final medicationId =
-        stateAfterAdd.items.firstWhere((item) => item.name == 'Myo-inositol').id;
+    final medicationId = stateAfterAdd.items
+        .firstWhere((item) => item.name == 'Myo-inositol')
+        .id;
     await container
         .read(medicationListControllerProvider.notifier)
         .logMedication(medicationId, MedicationLogStatus.taken);
 
-    final stateAfterLog =
-        await container.read(medicationListControllerProvider.future);
-    final item =
-        stateAfterLog.items.firstWhere((entry) => entry.id == medicationId);
+    final stateAfterLog = await container.read(
+      medicationListControllerProvider.future,
+    );
+    final item = stateAfterLog.items.firstWhere(
+      (entry) => entry.id == medicationId,
+    );
     expect(item.lastStatus, MedicationLogStatus.taken);
   });
 
@@ -75,4 +82,3 @@ void main() {
     expect(state.isSaving, isFalse);
   });
 }
-

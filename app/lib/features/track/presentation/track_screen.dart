@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/domain/app_types.dart';
 import '../../../core/domain/input_validation.dart';
@@ -13,30 +14,26 @@ class TrackScreen extends ConsumerStatefulWidget {
 }
 
 class _TrackScreenState extends ConsumerState<TrackScreen> {
-  final _symptomNotesController = TextEditingController();
-  final _movementController = TextEditingController(text: '20');
-  final _hydrationController = TextEditingController(text: '6');
-  final _sleepController = TextEditingController(text: '7.5');
+  final _formKey = GlobalKey<FormState>();
+  final _notesController = TextEditingController();
 
-  SymptomSeverity _painSeverity = SymptomSeverity.moderate;
-  final SymptomSeverity _acneSeverity = SymptomSeverity.mild;
+  DateTime _selectedDate = dateOnly(DateTime.now());
+  double _painLevel = 2;
+  SymptomSeverity _acneSeverity = SymptomSeverity.mild;
   WellbeingScale _mood = WellbeingScale.steady;
-  WellbeingScale _energy = WellbeingScale.low;
-  final WellbeingScale _sleepQuality = WellbeingScale.steady;
-  WellbeingScale _stress = WellbeingScale.steady;
+  WellbeingScale _energy = WellbeingScale.steady;
+  WellbeingScale _sleepQuality = WellbeingScale.steady;
 
   @override
   void dispose() {
-    _symptomNotesController.dispose();
-    _movementController.dispose();
-    _hydrationController.dispose();
-    _sleepController.dispose();
+    _notesController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final trackingState = ref.watch(trackingControllerProvider);
+    final currentCycle = trackingState.value?.snapshot.currentCycle;
 
     ref.listen(trackingControllerProvider, (previous, next) {
       final previousMessage = previous?.value?.errorMessage;
@@ -49,214 +46,217 @@ class _TrackScreenState extends ConsumerState<TrackScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Track')),
       body: trackingState.when(
-        data: (state) => ListView(
-          padding: const EdgeInsets.all(20),
-          children: [
-            Text(
-              'Cycle and symptom tracker',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<SymptomSeverity>(
-              initialValue: _painSeverity,
-              decoration: const InputDecoration(labelText: 'Pain'),
-              items: SymptomSeverity.values
-                  .map(
-                    (value) => DropdownMenuItem(
-                      value: value,
-                      child: Text(value.label),
-                    ),
-                  )
-                  .toList(),
-              onChanged: (value) => setState(() => _painSeverity = value!),
-            ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<WellbeingScale>(
-              initialValue: _mood,
-              decoration: const InputDecoration(labelText: 'Mood'),
-              items: WellbeingScale.values
-                  .map(
-                    (value) => DropdownMenuItem(
-                      value: value,
-                      child: Text(value.label),
-                    ),
-                  )
-                  .toList(),
-              onChanged: (value) => setState(() => _mood = value!),
-            ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<WellbeingScale>(
-              initialValue: _energy,
-              decoration: const InputDecoration(labelText: 'Energy'),
-              items: WellbeingScale.values
-                  .map(
-                    (value) => DropdownMenuItem(
-                      value: value,
-                      child: Text(value.label),
-                    ),
-                  )
-                  .toList(),
-              onChanged: (value) => setState(() => _energy = value!),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _symptomNotesController,
-              decoration: const InputDecoration(labelText: 'Notes'),
-            ),
-            const SizedBox(height: 12),
-            FilledButton(
-              onPressed: state.isSaving ? null : _logSymptom,
-              child: const Text('Save symptom check-in'),
-            ),
-            const SizedBox(height: 12),
-            OutlinedButton(
-              onPressed: state.isSaving ? null : _startCycle,
-              child: const Text('Start cycle today'),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'Lifestyle log',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _movementController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Movement minutes'),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _hydrationController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Hydration glasses'),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _sleepController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(labelText: 'Sleep hours'),
-            ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<WellbeingScale>(
-              initialValue: _stress,
-              decoration: const InputDecoration(labelText: 'Stress'),
-              items: WellbeingScale.values
-                  .map(
-                    (value) => DropdownMenuItem(
-                      value: value,
-                      child: Text(value.label),
-                    ),
-                  )
-                  .toList(),
-              onChanged: (value) => setState(() => _stress = value!),
-            ),
-            const SizedBox(height: 12),
-            FilledButton.tonal(
-              onPressed: state.isSaving ? null : _logHabit,
-              child: const Text('Save habit log'),
-            ),
-            if (state.errorMessage != null) ...[
-              const SizedBox(height: 12),
+        data: (state) => Form(
+          key: _formKey,
+          child: ListView(
+            padding: const EdgeInsets.all(20),
+            children: [
               Text(
-                state.errorMessage!,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
+                'Log today’s symptoms',
+                style: Theme.of(context).textTheme.headlineSmall,
               ),
-            ],
-            const SizedBox(height: 24),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(18),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Latest snapshot',
-                        style: Theme.of(context).textTheme.titleMedium),
-                    const SizedBox(height: 8),
-                    Text(
-                      state.snapshot.latestCycle == null
-                          ? 'Cycle: none'
-                          : 'Cycle: ${formatCompactDate(state.snapshot.latestCycle!.startDate)}',
-                    ),
-                    Text(
-                      state.snapshot.latestSymptom == null
-                          ? 'Symptom: none'
-                          : 'Symptom pain: ${state.snapshot.latestSymptom!.painSeverity.label}',
-                    ),
-                    Text(
-                      state.snapshot.latestHabit == null
-                          ? 'Habit: none'
-                          : 'Movement: ${state.snapshot.latestHabit!.movementMinutes} min',
-                    ),
-                  ],
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: _pickDate,
+                icon: const Icon(Icons.calendar_today_outlined),
+                label: Text('Date: ${formatCompactDate(_selectedDate)}'),
+              ),
+              const SizedBox(height: 20),
+              Text('Pain level: ${_painLevel.round()}'),
+              Slider(
+                value: _painLevel,
+                divisions: 3,
+                min: 0,
+                max: 3,
+                label: SymptomSeverity.values[_painLevel.round()].label,
+                onChanged: state.isSaving
+                    ? null
+                    : (value) => setState(() => _painLevel = value),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<WellbeingScale>(
+                initialValue: _mood,
+                decoration: const InputDecoration(labelText: 'Mood'),
+                items: WellbeingScale.values
+                    .map(
+                      (value) => DropdownMenuItem(
+                        value: value,
+                        child: Text(value.label),
+                      ),
+                    )
+                    .toList(),
+                onChanged: state.isSaving
+                    ? null
+                    : (value) => setState(() => _mood = value!),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<WellbeingScale>(
+                initialValue: _energy,
+                decoration: const InputDecoration(labelText: 'Energy'),
+                items: WellbeingScale.values
+                    .map(
+                      (value) => DropdownMenuItem(
+                        value: value,
+                        child: Text(value.label),
+                      ),
+                    )
+                    .toList(),
+                onChanged: state.isSaving
+                    ? null
+                    : (value) => setState(() => _energy = value!),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<WellbeingScale>(
+                initialValue: _sleepQuality,
+                decoration: const InputDecoration(labelText: 'Sleep quality'),
+                items: WellbeingScale.values
+                    .map(
+                      (value) => DropdownMenuItem(
+                        value: value,
+                        child: Text(value.label),
+                      ),
+                    )
+                    .toList(),
+                onChanged: state.isSaving
+                    ? null
+                    : (value) => setState(() => _sleepQuality = value!),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<SymptomSeverity>(
+                initialValue: _acneSeverity,
+                decoration: const InputDecoration(labelText: 'Acne severity'),
+                items: SymptomSeverity.values
+                    .map(
+                      (value) => DropdownMenuItem(
+                        value: value,
+                        child: Text(value.label),
+                      ),
+                    )
+                    .toList(),
+                onChanged: state.isSaving
+                    ? null
+                    : (value) => setState(() => _acneSeverity = value!),
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _notesController,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  labelText: 'Notes (optional)',
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: 16),
+              FilledButton(
+                onPressed: state.isSaving ? null : _saveSymptom,
+                child: const Text('Save entry'),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Cycle actions',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                currentCycle == null
+                    ? 'No active period.'
+                    : 'Current period started ${formatCompactDate(currentCycle.startDate)}.',
+              ),
+              const SizedBox(height: 12),
+              FilledButton.tonal(
+                onPressed: state.isSaving || currentCycle != null
+                    ? null
+                    : _startCycle,
+                child: const Text('Start period'),
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton(
+                onPressed: state.isSaving || currentCycle == null
+                    ? null
+                    : _endCycle,
+                child: const Text('End period'),
+              ),
+            ],
+          ),
         ),
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(child: Text('Failed to load tracker: $error')),
+        error: (error, _) =>
+            Center(child: Text('Failed to load tracker: $error')),
       ),
     );
   }
 
-  Future<void> _logSymptom() async {
-    if (_symptomNotesController.text.trim().length > 240) {
-      _showMessage('Symptom notes are too long.');
-      return;
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    if (picked != null) {
+      setState(() => _selectedDate = dateOnly(picked));
     }
+  }
 
-    await ref.read(trackingControllerProvider.notifier).addSymptomEntry(
+  Future<void> _saveSymptom() async {
+    await ref
+        .read(trackingControllerProvider.notifier)
+        .saveSymptomEntry(
           SymptomDraft(
-            painSeverity: _painSeverity,
+            loggedAt: _selectedDate,
+            painSeverity: SymptomSeverity.values[_painLevel.round()],
             acneSeverity: _acneSeverity,
             mood: _mood,
             energy: _energy,
             sleepQuality: _sleepQuality,
-            notes: _symptomNotesController.text.trim(),
+            notes: _notesController.text.trim(),
           ),
         );
-    _symptomNotesController.clear();
-  }
-
-  Future<void> _startCycle() async {
-    await ref.read(trackingControllerProvider.notifier).startCycleToday();
-  }
-
-  Future<void> _logHabit() async {
-    final movementError = InputValidation.nonNegativeInt(
-      _movementController.text,
-      fieldName: 'Movement minutes',
-      max: 1440,
-    );
-    final hydrationError = InputValidation.nonNegativeInt(
-      _hydrationController.text,
-      fieldName: 'Hydration glasses',
-      max: 50,
-    );
-    final sleepError = InputValidation.nonNegativeDouble(
-      _sleepController.text,
-      fieldName: 'Sleep hours',
-      max: 24,
-    );
-
-    final firstError = movementError ?? hydrationError ?? sleepError;
-    if (firstError != null) {
-      _showMessage(firstError);
+    if (!mounted) {
       return;
     }
 
-    final movement = int.tryParse(_movementController.text) ?? 0;
-    final hydration = int.tryParse(_hydrationController.text) ?? 0;
-    final sleep = double.tryParse(_sleepController.text) ?? 0;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Symptom entry saved.')));
+    context.go('/home');
+  }
 
-    await ref.read(trackingControllerProvider.notifier).addHabitLog(
-          HabitDraft(
-            movementMinutes: movement,
-            hydrationGlasses: hydration,
-            sleepHours: sleep,
-            stressLevel: _stress,
-          ),
-        );
+  Future<void> _startCycle() async {
+    final started = await ref
+        .read(trackingControllerProvider.notifier)
+        .startCycle(startDate: _selectedDate);
+    if (!mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          started ? 'Period started.' : 'A period is already active.',
+        ),
+      ),
+    );
+    if (started) {
+      context.go('/home');
+    }
+  }
+
+  Future<void> _endCycle() async {
+    final ended = await ref
+        .read(trackingControllerProvider.notifier)
+        .endCycle(endDate: _selectedDate);
+    if (!mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(ended ? 'Period ended.' : 'No active period to end.'),
+      ),
+    );
+    if (ended) {
+      context.go('/home');
+    }
   }
 
   void _showMessage(String message) {

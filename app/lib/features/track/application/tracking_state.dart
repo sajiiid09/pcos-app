@@ -5,8 +5,8 @@ import '../data/tracking_repository.dart';
 
 final trackingControllerProvider =
     AsyncNotifierProvider<TrackingController, TrackingState>(
-  TrackingController.new,
-);
+      TrackingController.new,
+    );
 
 class TrackingController extends AsyncNotifier<TrackingState> {
   TrackingRepository get _repository => ref.read(trackingRepositoryProvider);
@@ -16,18 +16,43 @@ class TrackingController extends AsyncNotifier<TrackingState> {
     return _load();
   }
 
-  Future<void> addSymptomEntry(SymptomDraft draft) async {
-    await _runMutation(
-      operation: () => _repository.addSymptomEntry(draft),
-      errorMessage: 'Unable to save symptom check-in. Please try again.',
-    );
+  Future<void> saveSymptomEntry(SymptomDraft draft) async {
+    final current = state.value ?? TrackingState.initial();
+    state = AsyncData(current.copyWith(isSaving: true));
+    await _repository.saveSymptomEntry(draft);
+    state = AsyncData(await _load());
   }
 
-  Future<void> startCycleToday() async {
-    await _runMutation(
-      operation: _repository.startCycleToday,
-      errorMessage: 'Unable to start cycle entry. Please try again.',
+  Future<bool> startCycle({
+    required DateTime startDate,
+    FlowLevel? flowLevel,
+    String notes = '',
+  }) async {
+    final current = state.value ?? TrackingState.initial();
+    state = AsyncData(current.copyWith(isSaving: true));
+    final created = await _repository.startCycle(
+      startDate: startDate,
+      flowLevel: flowLevel,
+      notes: notes,
     );
+    state = AsyncData(await _load());
+    return created;
+  }
+
+  Future<bool> endCycle({
+    required DateTime endDate,
+    FlowLevel? flowLevel,
+    String notes = '',
+  }) async {
+    final current = state.value ?? TrackingState.initial();
+    state = AsyncData(current.copyWith(isSaving: true));
+    final ended = await _repository.endCycle(
+      endDate: endDate,
+      flowLevel: flowLevel,
+      notes: notes,
+    );
+    state = AsyncData(await _load());
+    return ended;
   }
 
   Future<void> addHabitLog(HabitDraft draft) async {

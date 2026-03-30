@@ -5,13 +5,53 @@ import 'package:go_router/go_router.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/learn/presentation/learn_screen.dart';
 import '../../features/meds/presentation/meds_screen.dart';
-import '../../features/reports/presentation/reports_screen.dart';
+import '../../features/onboarding/application/onboarding_controller.dart';
+import '../../features/onboarding/presentation/onboarding_screen.dart';
+import '../../features/onboarding/presentation/splash_screen.dart';
+import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/track/presentation/track_screen.dart';
+import 'error_screen.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
+  final onboardingState = ref.watch(onboardingControllerProvider);
+
   return GoRouter(
-    initialLocation: '/home',
+    initialLocation: '/splash',
+    redirect: (context, state) {
+      final location = state.matchedLocation;
+      final hasProfile = onboardingState.value != null;
+
+      if (onboardingState.isLoading) {
+        return location == '/splash' ? null : '/splash';
+      }
+
+      if (onboardingState.hasError) {
+        return location == '/error' ? null : '/error';
+      }
+
+      if (!hasProfile) {
+        return location == '/onboarding' ? null : '/onboarding';
+      }
+
+      if (location == '/splash' || location == '/onboarding') {
+        return '/home';
+      }
+
+      return null;
+    },
     routes: [
+      GoRoute(
+        path: '/splash',
+        builder: (context, state) => const SplashScreen(),
+      ),
+      GoRoute(
+        path: '/error',
+        builder: (context, state) => const ErrorScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding',
+        builder: (context, state) => const OnboardingScreen(),
+      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return AppShell(navigationShell: navigationShell);
@@ -56,9 +96,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/reports',
-                name: 'reports',
-                builder: (context, state) => const ReportsScreen(),
+                path: '/profile',
+                name: 'profile',
+                builder: (context, state) => const ProfileScreen(),
               ),
             ],
           ),
@@ -107,13 +147,12 @@ class AppShell extends StatelessWidget {
             label: 'Learn',
           ),
           NavigationDestination(
-            icon: Icon(Icons.summarize_outlined),
-            selectedIcon: Icon(Icons.summarize),
-            label: 'Reports',
+            icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.person),
+            label: 'Profile',
           ),
         ],
       ),
     );
   }
 }
-

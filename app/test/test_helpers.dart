@@ -5,9 +5,6 @@ import 'package:pcos_companion/core/database/app_database.dart';
 ProviderContainer createContainer({List<Override> overrides = const []}) {
   final database = AppDatabase(NativeDatabase.memory());
   return ProviderContainer(
-    overrides: [
-      appDatabaseProvider.overrideWithValue(database),
-      ...overrides,
-    ],
+    overrides: [appDatabaseProvider.overrideWithValue(database)],
   );
 }

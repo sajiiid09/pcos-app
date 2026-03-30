@@ -5,8 +5,8 @@ import '../data/report_repository.dart';
 
 final reportPreviewControllerProvider =
     AsyncNotifierProvider<ReportPreviewController, DoctorSummaryPreview>(
-  ReportPreviewController.new,
-);
+      ReportPreviewController.new,
+    );
 
 class ReportPreviewController extends AsyncNotifier<DoctorSummaryPreview> {
   @override
@@ -21,4 +21,3 @@ class ReportPreviewController extends AsyncNotifier<DoctorSummaryPreview> {
     );
   }
 }
-

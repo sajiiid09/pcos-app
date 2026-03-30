@@ -5,7 +5,6 @@ import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import 'package:uuid/uuid.dart';
 
 import '../domain/app_types.dart';
 
@@ -16,6 +15,18 @@ final appDatabaseProvider = Provider<AppDatabase>((ref) {
   ref.onDispose(database.close);
   return database;
 });
+
+class UserProfiles extends Table {
+  TextColumn get id => text()();
+  TextColumn get name => text()();
+  TextColumn get ageRange => textEnum<AgeRange>()();
+  TextColumn get diagnosisLabel => textEnum<DiagnosisLabel>()();
+  TextColumn get primaryGoal => textEnum<PrimaryGoal>()();
+  DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
 
 class Medications extends Table {
   TextColumn get id => text()();
@@ -44,6 +55,8 @@ class CycleEntries extends Table {
   TextColumn get id => text()();
   DateTimeColumn get startDate => dateTime()();
   DateTimeColumn get endDate => dateTime().nullable()();
+  TextColumn get flowLevel => textEnum<FlowLevel>().nullable()();
+  TextColumn get notes => text().nullable()();
 
   @override
   Set<Column<Object>> get primaryKey => {id};
@@ -76,79 +89,34 @@ class HabitLogs extends Table {
 }
 
 @DriftDatabase(
-  tables: [Medications, MedicationLogs, CycleEntries, SymptomEntries, HabitLogs],
+  tables: [
+    UserProfiles,
+    Medications,
+    MedicationLogs,
+    CycleEntries,
+    SymptomEntries,
+    HabitLogs,
+  ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
-  Future<void> seedDemoData() async {
-    final existingMedication = await (select(medications)..limit(1)).getSingleOrNull();
-    if (existingMedication != null) {
-      return;
-    }
-
-    const uuid = Uuid();
-    final now = DateTime.now();
-    final medicationId = uuid.v4();
-
-    await transaction(() async {
-      await into(medications).insert(
-        MedicationsCompanion.insert(
-          id: medicationId,
-          name: 'Metformin',
-          dosage: '500 mg',
-          frequency: 'Twice daily',
-          notes: const Value('Take with food.'),
-          createdAt: now.subtract(const Duration(days: 14)),
-        ),
-      );
-
-      await into(medicationLogs).insert(
-        MedicationLogsCompanion.insert(
-          id: uuid.v4(),
-          medicationId: medicationId,
-          status: MedicationLogStatus.taken,
-          scheduledFor: now.subtract(const Duration(hours: 2)),
-          loggedAt: now.subtract(const Duration(hours: 2)),
-        ),
-      );
-
-      await into(cycleEntries).insert(
-        CycleEntriesCompanion.insert(
-          id: uuid.v4(),
-          startDate: dateOnly(now.subtract(const Duration(days: 4))),
-          endDate: const Value.absent(),
-        ),
-      );
-
-      await into(symptomEntries).insert(
-        SymptomEntriesCompanion.insert(
-          id: uuid.v4(),
-          loggedAt: now.subtract(const Duration(hours: 1)),
-          painSeverity: SymptomSeverity.moderate,
-          acneSeverity: SymptomSeverity.mild,
-          mood: WellbeingScale.steady,
-          energy: WellbeingScale.low,
-          sleepQuality: WellbeingScale.steady,
-          notes: const Value('Energy dipped after lunch.'),
-        ),
-      );
-
-      await into(habitLogs).insert(
-        HabitLogsCompanion.insert(
-          id: uuid.v4(),
-          loggedAt: now.subtract(const Duration(minutes: 30)),
-          movementMinutes: 25,
-          hydrationGlasses: 6,
-          sleepHours: 7.0,
-          stressLevel: WellbeingScale.steady,
-        ),
-      );
-    });
-  }
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onCreate: (migrator) async {
+      await migrator.createAll();
+    },
+    onUpgrade: (migrator, from, to) async {
+      if (from < 2) {
+        await migrator.createTable(userProfiles);
+        await migrator.addColumn(cycleEntries, cycleEntries.flowLevel);
+        await migrator.addColumn(cycleEntries, cycleEntries.notes);
+      }
+    },
+  );
 }
 
 LazyDatabase _openConnection() {

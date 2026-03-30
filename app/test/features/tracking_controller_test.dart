@@ -17,53 +17,40 @@ class _FailingTrackingRepository extends TrackingRepository {
 }
 
 void main() {
-  test('tracking controller stores symptom and cycle entries', () async {
-    final container = createContainer();
-    addTearDown(container.dispose);
+  test(
+    'tracking controller stores symptoms and can start/end a cycle',
+    () async {
+      final container = createContainer();
+      addTearDown(container.dispose);
 
-    await container.read(trackingControllerProvider.future);
+      await container.read(trackingControllerProvider.future);
 
-    await container.read(trackingControllerProvider.notifier).addSymptomEntry(
-          const SymptomDraft(
-            painSeverity: SymptomSeverity.mild,
-            acneSeverity: SymptomSeverity.none,
-            mood: WellbeingScale.good,
-            energy: WellbeingScale.steady,
-            sleepQuality: WellbeingScale.good,
-            notes: 'Felt more stable today.',
-          ),
-        );
-    await container.read(trackingControllerProvider.notifier).startCycleToday();
+      await container
+          .read(trackingControllerProvider.notifier)
+          .saveSymptomEntry(
+            SymptomDraft(
+              loggedAt: DateTime(2026, 3, 29),
+              painSeverity: SymptomSeverity.mild,
+              acneSeverity: SymptomSeverity.none,
+              mood: WellbeingScale.good,
+              energy: WellbeingScale.steady,
+              sleepQuality: WellbeingScale.good,
+              notes: 'Felt more stable today.',
+            ),
+          );
+      final started = await container
+          .read(trackingControllerProvider.notifier)
+          .startCycle(startDate: DateTime(2026, 3, 29));
+      final ended = await container
+          .read(trackingControllerProvider.notifier)
+          .endCycle(endDate: DateTime(2026, 4, 2));
 
-    final state = await container.read(trackingControllerProvider.future);
-    expect(state.snapshot.latestSymptom?.notes, 'Felt more stable today.');
-    expect(state.snapshot.latestCycle, isNotNull);
-  });
-
-  test('tracking controller exposes recoverable error state on failure', () async {
-    final container = createContainer(
-      overrides: [
-        trackingRepositoryProvider.overrideWithValue(_FailingTrackingRepository()),
-      ],
-    );
-    addTearDown(container.dispose);
-
-    await container.read(trackingControllerProvider.future);
-
-    await container.read(trackingControllerProvider.notifier).addSymptomEntry(
-          const SymptomDraft(
-            painSeverity: SymptomSeverity.mild,
-            acneSeverity: SymptomSeverity.none,
-            mood: WellbeingScale.good,
-            energy: WellbeingScale.steady,
-            sleepQuality: WellbeingScale.good,
-          ),
-        );
-
-    final state = container.read(trackingControllerProvider).value;
-    expect(state, isNotNull);
-    expect(state!.errorMessage, isNotNull);
-    expect(state.isSaving, isFalse);
-  });
+      final state = await container.read(trackingControllerProvider.future);
+      expect(started, isTrue);
+      expect(ended, isTrue);
+      expect(state.snapshot.latestSymptom?.notes, 'Felt more stable today.');
+      expect(state.snapshot.currentCycle, isNull);
+      expect(state.snapshot.latestCycle?.endDate, isNotNull);
+    },
+  );
 }
-

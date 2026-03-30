@@ -4,48 +4,65 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pcos_companion/app/app.dart';
 import 'package:pcos_companion/core/database/app_database.dart';
-import 'package:pcos_companion/core/notifications/notification_service.dart';
 
 void main() {
-  testWidgets('app boots into the five-tab shell', (tester) async {
-    final database = AppDatabase(NativeDatabase.memory());
-    addTearDown(database.close);
+  testWidgets(
+    'fresh app goes through onboarding, tracking, and relaunch persistence',
+    (tester) async {
+      final database = AppDatabase(NativeDatabase.memory());
+      addTearDown(database.close);
 
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          appDatabaseProvider.overrideWithValue(database),
-          notificationServiceProvider.overrideWithValue(_TestNotificationService()),
-        ],
-        child: const PcosApp(),
-      ),
-    );
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [appDatabaseProvider.overrideWithValue(database)],
+          child: const PcosApp(),
+        ),
+      );
+      await tester.pumpAndSettle();
 
-    expect(find.text('Today'), findsOneWidget);
-    expect(find.byIcon(Icons.home), findsOneWidget);
-    expect(find.byIcon(Icons.monitor_heart_outlined), findsOneWidget);
-    expect(find.byIcon(Icons.medication_outlined), findsOneWidget);
-    expect(find.byIcon(Icons.menu_book_outlined), findsOneWidget);
-    expect(find.byIcon(Icons.summarize_outlined), findsOneWidget);
+      expect(find.text('Welcome'), findsOneWidget);
 
-    await tester.tap(find.byIcon(Icons.monitor_heart_outlined));
-    await tester.pumpAndSettle();
-    expect(find.text('Cycle and symptom tracker'), findsOneWidget);
+      await tester.enterText(find.byType(TextFormField).first, 'Ava');
+      await tester.tap(find.text('Continue'));
+      await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(Icons.summarize_outlined));
-    await tester.pumpAndSettle();
-    expect(find.text('Doctor summary preview'), findsOneWidget);
-  });
-}
+      expect(find.text('Hi, Ava'), findsOneWidget);
+      expect(find.textContaining('No symptom entry yet'), findsOneWidget);
+      expect(find.textContaining('No period logged yet'), findsOneWidget);
 
-class _TestNotificationService implements AppNotificationService {
-  @override
-  Future<void> initialize() async {}
+      await tester.tap(find.text('Log symptoms'));
+      await tester.pumpAndSettle();
 
-  @override
-  Future<void> scheduleMedicationReminder({
-    required String title,
-    required String body,
-  }) async {}
+      expect(find.text('Log today’s symptoms'), findsOneWidget);
+
+      await tester.scrollUntilVisible(find.text('Save entry'), 300);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Save entry'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Hi, Ava'), findsOneWidget);
+      expect(find.textContaining('Last check-in'), findsOneWidget);
+
+      await tester.scrollUntilVisible(find.text('Start period'), 200);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Start period'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Current period started'), findsOneWidget);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpAndSettle();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [appDatabaseProvider.overrideWithValue(database)],
+          child: const PcosApp(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Hi, Ava'), findsOneWidget);
+      expect(find.textContaining('Last check-in'), findsOneWidget);
+      expect(find.textContaining('Current period started'), findsOneWidget);
+    },
+  );
 }

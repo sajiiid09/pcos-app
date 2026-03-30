@@ -52,7 +52,9 @@ class MedicationRepository {
   }
 
   Future<void> addMedication(MedicationDraft draft) async {
-    await _database.into(_database.medications).insert(
+    await _database
+        .into(_database.medications)
+        .insert(
           MedicationsCompanion.insert(
             id: _uuid.v4(),
             name: draft.name.trim(),
@@ -69,7 +71,9 @@ class MedicationRepository {
     required MedicationLogStatus status,
   }) async {
     final now = DateTime.now();
-    await _database.into(_database.medicationLogs).insert(
+    await _database
+        .into(_database.medicationLogs)
+        .insert(
           MedicationLogsCompanion.insert(
             id: _uuid.v4(),
             medicationId: medicationId,
@@ -80,4 +84,3 @@ class MedicationRepository {
         );
   }
 }
-

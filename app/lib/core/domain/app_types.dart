@@ -9,30 +9,112 @@ enum HabitType { movement, hydration, sleep, stress, mealBalance }
 
 enum WellbeingScale { veryLow, low, steady, good, great }
 
+enum AgeRange { under18, age18To24, age25To34, age35To44, age45Plus }
+
+enum DiagnosisLabel { pcos, pcod, unsure }
+
+enum PrimaryGoal {
+  regulateCycle,
+  loseWeight,
+  improveSymptoms,
+  trackMedications,
+  generalWellness,
+}
+
+enum FlowLevel { light, medium, heavy }
+
 extension SymptomSeverityX on SymptomSeverity {
   String get label => switch (this) {
-        SymptomSeverity.none => 'None',
-        SymptomSeverity.mild => 'Mild',
-        SymptomSeverity.moderate => 'Moderate',
-        SymptomSeverity.severe => 'Severe',
-      };
+    SymptomSeverity.none => 'None',
+    SymptomSeverity.mild => 'Mild',
+    SymptomSeverity.moderate => 'Moderate',
+    SymptomSeverity.severe => 'Severe',
+  };
 }
 
 extension MedicationLogStatusX on MedicationLogStatus {
   String get label => switch (this) {
-        MedicationLogStatus.taken => 'Taken',
-        MedicationLogStatus.skipped => 'Skipped',
-      };
+    MedicationLogStatus.taken => 'Taken',
+    MedicationLogStatus.skipped => 'Skipped',
+  };
 }
 
 extension WellbeingScaleX on WellbeingScale {
   String get label => switch (this) {
-        WellbeingScale.veryLow => 'Very low',
-        WellbeingScale.low => 'Low',
-        WellbeingScale.steady => 'Steady',
-        WellbeingScale.good => 'Good',
-        WellbeingScale.great => 'Great',
-      };
+    WellbeingScale.veryLow => 'Very low',
+    WellbeingScale.low => 'Low',
+    WellbeingScale.steady => 'Steady',
+    WellbeingScale.good => 'Good',
+    WellbeingScale.great => 'Great',
+  };
+}
+
+extension AgeRangeX on AgeRange {
+  String get label => switch (this) {
+    AgeRange.under18 => 'Under 18',
+    AgeRange.age18To24 => '18 to 24',
+    AgeRange.age25To34 => '25 to 34',
+    AgeRange.age35To44 => '35 to 44',
+    AgeRange.age45Plus => '45+',
+  };
+}
+
+extension DiagnosisLabelX on DiagnosisLabel {
+  String get label => switch (this) {
+    DiagnosisLabel.pcos => 'PCOS',
+    DiagnosisLabel.pcod => 'PCOD',
+    DiagnosisLabel.unsure => 'Unsure',
+  };
+}
+
+extension PrimaryGoalX on PrimaryGoal {
+  String get label => switch (this) {
+    PrimaryGoal.regulateCycle => 'Regulate cycle',
+    PrimaryGoal.loseWeight => 'Lose weight',
+    PrimaryGoal.improveSymptoms => 'Improve symptoms',
+    PrimaryGoal.trackMedications => 'Track medications',
+    PrimaryGoal.generalWellness => 'General wellness',
+  };
+}
+
+extension FlowLevelX on FlowLevel {
+  String get label => switch (this) {
+    FlowLevel.light => 'Light',
+    FlowLevel.medium => 'Medium',
+    FlowLevel.heavy => 'Heavy',
+  };
+}
+
+class UserProfileDraft {
+  const UserProfileDraft({
+    required this.name,
+    required this.ageRange,
+    required this.diagnosisLabel,
+    required this.primaryGoal,
+  });
+
+  final String name;
+  final AgeRange ageRange;
+  final DiagnosisLabel diagnosisLabel;
+  final PrimaryGoal primaryGoal;
+}
+
+class UserProfileRecord {
+  const UserProfileRecord({
+    required this.id,
+    required this.name,
+    required this.ageRange,
+    required this.diagnosisLabel,
+    required this.primaryGoal,
+    required this.createdAt,
+  });
+
+  final String id;
+  final String name;
+  final AgeRange ageRange;
+  final DiagnosisLabel diagnosisLabel;
+  final PrimaryGoal primaryGoal;
+  final DateTime createdAt;
 }
 
 class MedicationDraft {
@@ -51,6 +133,7 @@ class MedicationDraft {
 
 class SymptomDraft {
   const SymptomDraft({
+    required this.loggedAt,
     required this.painSeverity,
     required this.acneSeverity,
     required this.mood,
@@ -59,6 +142,7 @@ class SymptomDraft {
     this.notes = '',
   });
 
+  final DateTime loggedAt;
   final SymptomSeverity painSeverity;
   final SymptomSeverity acneSeverity;
   final WellbeingScale mood;
@@ -114,11 +198,17 @@ class CycleEntryRecord {
     required this.id,
     required this.startDate,
     this.endDate,
+    this.flowLevel,
+    this.notes,
   });
 
   final String id;
   final DateTime startDate;
   final DateTime? endDate;
+  final FlowLevel? flowLevel;
+  final String? notes;
+
+  bool get isActive => endDate == null;
 }
 
 class SymptomEntryRecord {
@@ -163,14 +253,34 @@ class HabitLogRecord {
 
 class TrackingSnapshot {
   const TrackingSnapshot({
+    this.currentCycle,
     this.latestCycle,
     this.latestSymptom,
     this.latestHabit,
   });
 
+  final CycleEntryRecord? currentCycle;
   final CycleEntryRecord? latestCycle;
   final SymptomEntryRecord? latestSymptom;
   final HabitLogRecord? latestHabit;
+}
+
+class HomeDashboardState {
+  const HomeDashboardState({
+    required this.greeting,
+    required this.dateLabel,
+    required this.primaryGoalLabel,
+    required this.latestSymptomSummary,
+    required this.cycleStatus,
+    required this.hasActiveCycle,
+  });
+
+  final String greeting;
+  final String dateLabel;
+  final String primaryGoalLabel;
+  final String latestSymptomSummary;
+  final String cycleStatus;
+  final bool hasActiveCycle;
 }
 
 class DoctorSummaryPreview {
@@ -209,30 +319,8 @@ class EvidenceArticle {
   final String category;
 }
 
-class DailySummaryState {
-  const DailySummaryState({
-    required this.activeMedicationCount,
-    required this.nextReminderLabel,
-    required this.cycleDayLabel,
-    required this.habitHeadline,
-    required this.symptomHeadline,
-    required this.evidenceTip,
-  });
-
-  final int activeMedicationCount;
-  final String nextReminderLabel;
-  final String cycleDayLabel;
-  final String habitHeadline;
-  final String symptomHeadline;
-  final String evidenceTip;
-}
-
 class MedicationListState {
-  const MedicationListState({
-    required this.items,
-    this.isSaving = false,
-    this.errorMessage,
-  });
+  const MedicationListState({required this.items, this.isSaving = false});
 
   final List<MedicationListItem> items;
   final bool isSaving;
@@ -255,11 +343,7 @@ class MedicationListState {
 }
 
 class TrackingState {
-  const TrackingState({
-    required this.snapshot,
-    this.isSaving = false,
-    this.errorMessage,
-  });
+  const TrackingState({required this.snapshot, this.isSaving = false});
 
   final TrackingSnapshot snapshot;
   final bool isSaving;
@@ -268,12 +352,7 @@ class TrackingState {
   factory TrackingState.initial() =>
       const TrackingState(snapshot: TrackingSnapshot());
 
-  TrackingState copyWith({
-    TrackingSnapshot? snapshot,
-    bool? isSaving,
-    String? errorMessage,
-    bool clearError = false,
-  }) {
+  TrackingState copyWith({TrackingSnapshot? snapshot, bool? isSaving}) {
     return TrackingState(
       snapshot: snapshot ?? this.snapshot,
       isSaving: isSaving ?? this.isSaving,
@@ -282,9 +361,16 @@ class TrackingState {
   }
 }
 
-DateTime dateOnly(DateTime value) => DateTime(value.year, value.month, value.day);
+DateTime dateOnly(DateTime value) =>
+    DateTime(value.year, value.month, value.day);
 
 String formatCompactDate(DateTime value) => DateFormat('MMM d').format(value);
+
+String formatFullDate(DateTime value) =>
+    DateFormat('EEEE, MMM d').format(value);
+
+String formatCompactDateTime(DateTime value) =>
+    DateFormat('MMM d, h:mm a').format(value);
 
 extension OptionalStringValue on String {
   Value<String?> asNullableValue() {

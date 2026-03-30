@@ -16,110 +16,62 @@ class TrackingRepository {
   final Uuid _uuid = const Uuid();
 
   Future<TrackingSnapshot> fetchSnapshot() async {
-    final latestCycleRow = await (_database.select(_database.cycleEntries)
-          ..orderBy([(table) => OrderingTerm.desc(table.startDate)])
-          ..limit(1))
-        .getSingleOrNull();
-    final latestSymptomRow = await (_database.select(_database.symptomEntries)
-          ..orderBy([(table) => OrderingTerm.desc(table.loggedAt)])
-          ..limit(1))
-        .getSingleOrNull();
-    final latestHabitRow = await (_database.select(_database.habitLogs)
-          ..orderBy([(table) => OrderingTerm.desc(table.loggedAt)])
-          ..limit(1))
-        .getSingleOrNull();
-
+    final latestCycle = await _latestCycle();
     return TrackingSnapshot(
-      latestCycle: latestCycleRow == null
-          ? null
-          : CycleEntryRecord(
-              id: latestCycleRow.id,
-              startDate: latestCycleRow.startDate,
-              endDate: latestCycleRow.endDate,
-            ),
-      latestSymptom: latestSymptomRow == null
-          ? null
-          : SymptomEntryRecord(
-              id: latestSymptomRow.id,
-              loggedAt: latestSymptomRow.loggedAt,
-              painSeverity: latestSymptomRow.painSeverity,
-              acneSeverity: latestSymptomRow.acneSeverity,
-              mood: latestSymptomRow.mood,
-              energy: latestSymptomRow.energy,
-              sleepQuality: latestSymptomRow.sleepQuality,
-              notes: latestSymptomRow.notes,
-            ),
-      latestHabit: latestHabitRow == null
-          ? null
-          : HabitLogRecord(
-              id: latestHabitRow.id,
-              loggedAt: latestHabitRow.loggedAt,
-              movementMinutes: latestHabitRow.movementMinutes,
-              hydrationGlasses: latestHabitRow.hydrationGlasses,
-              sleepHours: latestHabitRow.sleepHours,
-              stressLevel: latestHabitRow.stressLevel,
-            ),
+      currentCycle: await getCurrentCycle(),
+      latestCycle: latestCycle,
+      latestSymptom: await getLatestSymptomEntry(),
+      latestHabit: await _latestHabit(),
     );
   }
 
   Future<List<CycleEntryRecord>> fetchCycles() async {
-    final query = _database.select(_database.cycleEntries)
-      ..orderBy([(table) => OrderingTerm.desc(table.startDate)]);
-    final rows = await query.get();
-    return rows
-        .map(
-          (row) => CycleEntryRecord(
-            id: row.id,
-            startDate: row.startDate,
-            endDate: row.endDate,
-          ),
-        )
-        .toList();
+    final rows = await (_database.select(
+      _database.cycleEntries,
+    )..orderBy([(table) => OrderingTerm.desc(table.startDate)])).get();
+    return rows.map(_cycleFromRow).toList();
   }
 
   Future<List<SymptomEntryRecord>> fetchSymptoms() async {
-    final query = _database.select(_database.symptomEntries)
-      ..orderBy([(table) => OrderingTerm.desc(table.loggedAt)]);
-    final rows = await query.get();
-    return rows
-        .map(
-          (row) => SymptomEntryRecord(
-            id: row.id,
-            loggedAt: row.loggedAt,
-            painSeverity: row.painSeverity,
-            acneSeverity: row.acneSeverity,
-            mood: row.mood,
-            energy: row.energy,
-            sleepQuality: row.sleepQuality,
-            notes: row.notes,
-          ),
-        )
-        .toList();
+    final rows = await (_database.select(
+      _database.symptomEntries,
+    )..orderBy([(table) => OrderingTerm.desc(table.loggedAt)])).get();
+    return rows.map(_symptomFromRow).toList();
   }
 
   Future<List<HabitLogRecord>> fetchHabits() async {
-    final query = _database.select(_database.habitLogs)
-      ..orderBy([(table) => OrderingTerm.desc(table.loggedAt)]);
-    final rows = await query.get();
-    return rows
-        .map(
-          (row) => HabitLogRecord(
-            id: row.id,
-            loggedAt: row.loggedAt,
-            movementMinutes: row.movementMinutes,
-            hydrationGlasses: row.hydrationGlasses,
-            sleepHours: row.sleepHours,
-            stressLevel: row.stressLevel,
-          ),
-        )
-        .toList();
+    final rows = await (_database.select(
+      _database.habitLogs,
+    )..orderBy([(table) => OrderingTerm.desc(table.loggedAt)])).get();
+    return rows.map(_habitFromRow).toList();
   }
 
-  Future<void> addSymptomEntry(SymptomDraft draft) async {
-    await _database.into(_database.symptomEntries).insert(
+  Future<SymptomEntryRecord?> getLatestSymptomEntry() async {
+    final row =
+        await (_database.select(_database.symptomEntries)
+              ..orderBy([(table) => OrderingTerm.desc(table.loggedAt)])
+              ..limit(1))
+            .getSingleOrNull();
+    return row == null ? null : _symptomFromRow(row);
+  }
+
+  Future<CycleEntryRecord?> getCurrentCycle() async {
+    final row =
+        await (_database.select(_database.cycleEntries)
+              ..where((table) => table.endDate.isNull())
+              ..orderBy([(table) => OrderingTerm.desc(table.startDate)])
+              ..limit(1))
+            .getSingleOrNull();
+    return row == null ? null : _cycleFromRow(row);
+  }
+
+  Future<void> saveSymptomEntry(SymptomDraft draft) async {
+    await _database
+        .into(_database.symptomEntries)
+        .insert(
           SymptomEntriesCompanion.insert(
             id: _uuid.v4(),
-            loggedAt: DateTime.now(),
+            loggedAt: draft.loggedAt,
             painSeverity: draft.painSeverity,
             acneSeverity: draft.acneSeverity,
             mood: draft.mood,
@@ -130,18 +82,57 @@ class TrackingRepository {
         );
   }
 
-  Future<void> startCycleToday() async {
-    await _database.into(_database.cycleEntries).insert(
+  Future<bool> startCycle({
+    required DateTime startDate,
+    FlowLevel? flowLevel,
+    String notes = '',
+  }) async {
+    final currentCycle = await getCurrentCycle();
+    if (currentCycle != null) {
+      return false;
+    }
+
+    await _database
+        .into(_database.cycleEntries)
+        .insert(
           CycleEntriesCompanion.insert(
             id: _uuid.v4(),
-            startDate: dateOnly(DateTime.now()),
+            startDate: dateOnly(startDate),
             endDate: const Value.absent(),
+            flowLevel: Value(flowLevel),
+            notes: notes.asNullableValue(),
           ),
         );
+    return true;
+  }
+
+  Future<bool> endCycle({
+    required DateTime endDate,
+    FlowLevel? flowLevel,
+    String notes = '',
+  }) async {
+    final currentCycle = await getCurrentCycle();
+    if (currentCycle == null) {
+      return false;
+    }
+
+    await (_database.update(
+      _database.cycleEntries,
+    )..where((table) => table.id.equals(currentCycle.id))).write(
+      CycleEntriesCompanion(
+        endDate: Value(dateOnly(endDate)),
+        flowLevel: Value(flowLevel),
+        notes: notes.asNullableValue(),
+      ),
+    );
+
+    return true;
   }
 
   Future<void> addHabitLog(HabitDraft draft) async {
-    await _database.into(_database.habitLogs).insert(
+    await _database
+        .into(_database.habitLogs)
+        .insert(
           HabitLogsCompanion.insert(
             id: _uuid.v4(),
             loggedAt: DateTime.now(),
@@ -151,5 +142,57 @@ class TrackingRepository {
             stressLevel: draft.stressLevel,
           ),
         );
+  }
+
+  Future<CycleEntryRecord?> _latestCycle() async {
+    final row =
+        await (_database.select(_database.cycleEntries)
+              ..orderBy([(table) => OrderingTerm.desc(table.startDate)])
+              ..limit(1))
+            .getSingleOrNull();
+    return row == null ? null : _cycleFromRow(row);
+  }
+
+  Future<HabitLogRecord?> _latestHabit() async {
+    final row =
+        await (_database.select(_database.habitLogs)
+              ..orderBy([(table) => OrderingTerm.desc(table.loggedAt)])
+              ..limit(1))
+            .getSingleOrNull();
+    return row == null ? null : _habitFromRow(row);
+  }
+
+  CycleEntryRecord _cycleFromRow(CycleEntry row) {
+    return CycleEntryRecord(
+      id: row.id,
+      startDate: row.startDate,
+      endDate: row.endDate,
+      flowLevel: row.flowLevel,
+      notes: row.notes,
+    );
+  }
+
+  SymptomEntryRecord _symptomFromRow(SymptomEntry row) {
+    return SymptomEntryRecord(
+      id: row.id,
+      loggedAt: row.loggedAt,
+      painSeverity: row.painSeverity,
+      acneSeverity: row.acneSeverity,
+      mood: row.mood,
+      energy: row.energy,
+      sleepQuality: row.sleepQuality,
+      notes: row.notes,
+    );
+  }
+
+  HabitLogRecord _habitFromRow(HabitLog row) {
+    return HabitLogRecord(
+      id: row.id,
+      loggedAt: row.loggedAt,
+      movementMinutes: row.movementMinutes,
+      hydrationGlasses: row.hydrationGlasses,
+      sleepHours: row.sleepHours,
+      stressLevel: row.stressLevel,
+    );
   }
 }
