@@ -22,3 +22,6 @@
 **/.env
 **/.env.*
 
+# OpenCode config (contains API keys)
+config.json
+

@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/auth/presentation/forgot_password_screen.dart';
+import '../../features/auth/presentation/get_started_screen.dart';
+import '../../features/auth/presentation/login_screen.dart';
+import '../../features/auth/presentation/sign_up_screen.dart';
+import '../../features/auth/presentation/welcome_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/learn/presentation/learn_screen.dart';
 import '../../features/meds/presentation/meds_screen.dart';
@@ -21,20 +26,42 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final location = state.matchedLocation;
       final hasProfile = onboardingState.value != null;
 
+      // While onboarding state is loading, stay on splash
       if (onboardingState.isLoading) {
         return location == '/splash' ? null : '/splash';
       }
 
+      // Error state
       if (onboardingState.hasError) {
         return location == '/error' ? null : '/error';
       }
 
-      if (!hasProfile) {
-        return location == '/onboarding' ? null : '/onboarding';
+      // If has profile (completed onboarding), go to home
+      if (hasProfile) {
+        if (location == '/splash' ||
+            location == '/welcome' ||
+            location == '/get-started' ||
+            location == '/sign-up' ||
+            location == '/login' ||
+            location == '/forgot-password' ||
+            location == '/onboarding') {
+          return '/home';
+        }
+        return null;
       }
 
-      if (location == '/splash' || location == '/onboarding') {
-        return '/home';
+      // No profile yet: if on a shell route, redirect to welcome
+      if (location == '/home' ||
+          location == '/track' ||
+          location == '/meds' ||
+          location == '/learn' ||
+          location == '/profile') {
+        return '/welcome';
+      }
+
+      // If on splash, move to welcome
+      if (location == '/splash') {
+        return '/welcome';
       }
 
       return null;
@@ -47,6 +74,26 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/error',
         builder: (context, state) => const ErrorScreen(),
+      ),
+      GoRoute(
+        path: '/welcome',
+        builder: (context, state) => const WelcomeScreen(),
+      ),
+      GoRoute(
+        path: '/get-started',
+        builder: (context, state) => const GetStartedScreen(),
+      ),
+      GoRoute(
+        path: '/sign-up',
+        builder: (context, state) => const SignUpScreen(),
+      ),
+      GoRoute(
+        path: '/login',
+        builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/forgot-password',
+        builder: (context, state) => const ForgotPasswordScreen(),
       ),
       GoRoute(
         path: '/onboarding',
